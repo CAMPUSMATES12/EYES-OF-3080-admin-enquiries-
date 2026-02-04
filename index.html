@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Enquiries | EYES OF 3080</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,Tahoma,sans-serif;
+  background:#f1f5f3;
+  color:#1f2937;
+}
+
+/* Header */
+header{
+  background:linear-gradient(135deg,#2d5016,#4a7c2a);
+  color:#fff;
+  padding:18px 20px;
+  font-size:1.25rem;
+  font-weight:700;
+}
+
+/* Container */
+.container{
+  max-width:900px;
+  margin:24px auto;
+  padding:0 14px;
+}
+
+/* Message Card */
+.enquiry-card{
+  background:#fff;
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* Card Header */
+.enquiry-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.enquiry-logo{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.enquiry-title{
+  font-weight:700;
+  font-size:.95rem;
+  color:#14532d;
+}
+
+.enquiry-time{
+  font-size:.75rem;
+  color:#6b7280;
+}
+
+/* Message Body */
+.enquiry-message{
+  font-size:.95rem;
+  line-height:1.7;
+  background:#f8faf9;
+  padding:14px;
+  border-radius:14px;
+}
+
+/* Attachment */
+.enquiry-attachment{
+  margin-top:4px;
+}
+
+.enquiry-attachment img{
+  width:100%;
+  max-height:260px;
+  object-fit:cover;
+  border-radius:14px;
+}
+
+.file-btn{
+  display:inline-block;
+  background:#dc2626;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:.85rem;
+  font-weight:600;
+  text-decoration:none;
+}
+
+.file-btn:hover{
+  background:#b91c1c;
+}
+
+/* Empty */
+.empty{
+  background:#fff;
+  padding:40px;
+  text-align:center;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  color:#555;
+}
+</style>
+</head>
+
+<body>
+
+<header>EYES OF 3080 — Anonymous Messages</header>
+
+<div class="container">
+  <div id="enquiriesBox">
+    <div class="empty">Loading enquiries…</div>
+  </div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://zvnovocoayqomdilidte.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2bm92b2NvYXlxb21kaWxpZHRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMDM2OTgsImV4cCI6MjA3OTU3OTY5OH0.PcpwASQ3RBRoQVIglxKz-yM3iuYMZMtyQJBh8QNHad8"
+);
+
+const SITE_LOGO =
+"https://zvnovocoayqomdilidte.supabase.co/storage/v1/object/public/uploads/6a8f3e57-3d27-47f5-9b5e-22a7070fc442.jpeg";
+
+const box = document.getElementById("enquiriesBox");
+
+async function loadEnquiries(){
+  const { data, error } = await supabaseClient
+    .from("enquiries")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    box.innerHTML = `<div class="empty">Failed to load enquiries</div>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    box.innerHTML = `<div class="empty">No enquiries yet</div>`;
+    return;
+  }
+
+  box.innerHTML = "";
+
+  data.forEach(e => {
+    const isImage = e.file_url && e.file_url.match(/\.(jpeg|jpg|png|gif|webp)$/i);
+
+    const card = document.createElement("div");
+    card.className = "enquiry-card";
+
+    card.innerHTML = `
+      <div class="enquiry-header">
+        <img src="${SITE_LOGO}" class="enquiry-logo">
+        <div>
+          <div class="enquiry-title">Anonymous Message</div>
+          <div class="enquiry-time">
+            ${new Date(e.created_at).toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      <div class="enquiry-message">
+        ${e.message}
+      </div>
+
+      ${e.file_url ? `
+        <div class="enquiry-attachment">
+          ${isImage
+            ? `<img src="${e.file_url}">`
+            : `<a href="${e.file_url}" target="_blank" class="file-btn">Open Attachment</a>`
+          }
+        </div>
+      ` : ``}
+    `;
+
+    box.appendChild(card);
+  });
+}
+
+loadEnquiries();
+</script>
+
+</body>
+</html>
